@@ -1,3 +1,4 @@
+import os
 import sys
 import tiny_yolo.TinyYoloDetection as TY
 from tkinter import messagebox as msg
@@ -42,6 +43,15 @@ class Track_Label_GUI(object):
         self._weight_path = "tiny_yolo/tiny-tank-yolo-mahesh_46800.weights"
         self._meta_path = "tiny_yolo/tank.data"
         self._detector = TY.YOLODetector(self._config_path, self._weight_path, self._meta_path)
+
+        # features and labels related initializations
+        self._boxes = None
+        self._label_list = []
+
+        # certain label txt related variables
+        self._label_folder = './Labels'
+        self._videos_folder = './Videos'
+        self._video_file_path = None
         return None
 
     def _initialize_tab_control(self):
@@ -72,20 +82,26 @@ class Track_Label_GUI(object):
         self._load_next_frame_btn.grid(row=0, column=4, sticky=tk.E)
 
         # button to load next frame
-        self._load_previous_frame_btn = ttk.Button(self._mainUIFrame, text="Previous", command=self._get_previous_frame)
-        self._load_previous_frame_btn.grid(row=0, column=3, sticky=tk.E)
+        # self._load_previous_frame_btn = ttk.Button(self._mainUIFrame, text="Previous", command=self._get_previous_frame)
+        # self._load_previous_frame_btn.grid(row=0, column=3, sticky=tk.E)
         return None
 
     # retrieves the next frame, runs it through the detector, displays it 
     def _get_next_frame(self):
+        # checks if there are any valid frames
         if self._frame_num > (self._NUM_OF_VID_FRAMES):
             msg.showinfo('Frame does not exist', 'This application has not been designed to rupture the space-time continuum')
             return None
+
+        # writes the previous information into the file
+        self._write_into_file()
+
+        # retrives the next frame
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
         if not ok:
-            print("frame retrieval not successfull")
+            print("frame retrieval unsuccessfull")
             sys.exit()
 
         self._display_frame(frame)
@@ -100,22 +116,38 @@ class Track_Label_GUI(object):
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
         if not ok:
-            print("frame retrieval not successfull")
+            print("frame retrieval unsuccessfull")
             sys.exit()
 
         self._display_frame(frame)
         return None
 
 
+    # funtion that writes into file
+    def _write_into_file(self):
+        text = "{},{},{}\n".format(self._frame_num, self._boxes, self._label_list)
+        with open(self._video_file_path, 'a') as f:
+            f.write(text)
+
+        self._boxes = None
+        self._label_list = []
+        return None
+
     # click event handler function
     def _leftclick(self, event):
         x = event.x
         y = event.y
         point = (x, y)
-        self._child_root = tk.Tk()
-        self._child_root.title("Tracklet labelling")
-        self._initialize_child()
-        self._child_root.mainloop()
+        roi_list = self._boxes
+        if len(self._boxes) > 0:
+            for roi in roi_list:
+                if self._point_in_box(point, roi):
+                    self._child_root = tk.Tk()
+                    self._child_root.title("Labelling Window")
+                    self._initialize_child()
+                    self._child_root.mainloop()
+                else:
+                    msg.showinfo('Invalid selection', 'Click inside a detection box')
         return None
 
     def _initialize_child(self):
@@ -133,16 +165,22 @@ class Track_Label_GUI(object):
         self._track_label_btn = ttk.Button(self._childFrame, text='Store', command=self._track_label)
         self._track_label_btn.grid(row=0, column=2, sticky=tk.E)
 
+        # setting focus
+        self._track_textbox.focus()
+
         return None
 
+    # appends the label into a data structure
     def _track_label(self):
-        self._label_list.append(self._track_text.get())
-        return
+        print(int(self._track_textbox.get()))
+        self._label_list.append(int(self._track_textbox.get()))
+        self._child_root.destroy()
 
     # detects the tanks and display them
     def _display_frame(self, frame):
         # run it through the detector
         confidence_list, boxes, frame = self._detector.detect(frame, draw=False)
+        self._boxes = boxes
         for box in boxes:
             cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255,255,255], 2)
         print(boxes) # DEBUGGING PRINT
@@ -185,6 +223,17 @@ class Track_Label_GUI(object):
 
         # get and display detections
         self._display_frame(frame)
+
+        # creates a .txt file for writing
+        video_file = self._video_name.split('/')[-1].split('.')[0]
+        if not os.path.exists(self._label_folder):
+            os.makedirs(self._label_folder)
+        if not os.path.exists(self._videos_folder):
+            os.makedirs(self._videos_folder)
+        self._video_file_path = os.path.join(self._label_folder, video_file+'_label.txt')
+        with open(self._video_file_path, 'w') as f:
+            text = "frameID, detection_list, label_list\n"
+            f.write(text)
         return None
 
 
