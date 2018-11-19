@@ -94,6 +94,7 @@ class Track_Label_GUI(object):
             self._write_into_file()
         else:
             msg.showinfo('Unfinished labelling','There are Detections yet to be labelled')
+            return None
         # checks if there are any valid frames
         if self._frame_num > (self._NUM_OF_VID_FRAMES):
             msg.showinfo('Frame does not exist', 'This application has not been designed to rupture the space-time continuum')
