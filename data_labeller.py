@@ -47,6 +47,7 @@ class Track_Label_GUI(object):
         # features and labels related initializations
         self._boxes = None
         self._label_list = []
+        self._labelled_boxes = [] # boxes that have been labelled
 
         # certain label txt related variables
         self._label_folder = './Labels'
@@ -88,20 +89,23 @@ class Track_Label_GUI(object):
 
     # retrieves the next frame, runs it through the detector, displays it 
     def _get_next_frame(self):
+        if len(self._labelled_boxes) == len(self._boxes):
+            # writes the previous information into the file
+            self._write_into_file()
+        else:
+            msg.showinfo('Unfinished labelling','There are Detections yet to be labelled')
         # checks if there are any valid frames
         if self._frame_num > (self._NUM_OF_VID_FRAMES):
             msg.showinfo('Frame does not exist', 'This application has not been designed to rupture the space-time continuum')
             return None
 
-        # writes the previous information into the file
-        self._write_into_file()
 
         # retrives the next frame
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
         if not ok:
-            print("frame retrieval unsuccessfull")
+            print("frame retrieval unsuccessful")
             sys.exit()
 
         self._display_frame(frame)
@@ -116,7 +120,7 @@ class Track_Label_GUI(object):
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
         if not ok:
-            print("frame retrieval unsuccessfull")
+            print("frame retrieval unsuccessful")
             sys.exit()
 
         self._display_frame(frame)
@@ -125,7 +129,7 @@ class Track_Label_GUI(object):
 
     # funtion that writes into file
     def _write_into_file(self):
-        text = "{},{},{}\n".format(self._frame_num, self._boxes, self._label_list)
+        text = "{},{},{}\n".format(self._frame_num, self._labelled_boxes, self._label_list)
         with open(self._video_file_path, 'a') as f:
             f.write(text)
 
@@ -146,10 +150,12 @@ class Track_Label_GUI(object):
                     self._child_root.title("Labelling Window")
                     self._initialize_child()
                     self._child_root.mainloop()
+                    self._labelled_boxes.append(roi)
                 else:
                     msg.showinfo('Invalid selection', 'Click inside a detection box')
         return None
 
+    # UI element that is responsible for asking detection labels from the user
     def _initialize_child(self):
 
         # declare a child frame that contains all widgets
@@ -172,9 +178,12 @@ class Track_Label_GUI(object):
 
     # appends the label into a data structure
     def _track_label(self):
-        print(int(self._track_textbox.get()))
-        self._label_list.append(int(self._track_textbox.get()))
-        self._child_root.destroy()
+        try:
+            print(int(self._track_textbox.get()))
+            self._label_list.append(int(self._track_textbox.get()))
+            self._child_root.destroy()
+        except:
+            msg.showinfo('Invalid Input','Tracklet number have to be integers ')
 
     # detects the tanks and display them
     def _display_frame(self, frame):
