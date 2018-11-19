@@ -1,6 +1,15 @@
 .ycm*
+
+# stuff such as .idea folder, etc
 .*/
+
+# The labels and videos folder generated while using the application
 Labels/
 Videos/
+
+# Stuff inside tiny_yolo folder (like weights, dlls, etc), but excluding any python files
 /tiny_yolo/
-!/tiny_yolo/TinyYoloDetection.py
+!/tiny_yolo/*.py
+
+# Any markdown files which contain notes
+*.md
