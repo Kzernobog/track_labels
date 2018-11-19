@@ -17,6 +17,7 @@ class Detection:
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
         else:
+            # TODO Provide an option for drawing black boxes for non-tank objects
             # draw a slightly thicker red box
             colour = (0, 0, 255)
             box_thickness = 2
@@ -39,3 +40,7 @@ class Detection:
             return True
         else:
             return False
+
+    def reset(self):
+        self.label = None
+        self.is_marked = False

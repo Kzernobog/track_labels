@@ -1,0 +1,73 @@
+from detection_class import Detection
+
+
+class DetectionList:
+    def __init__(self, bbox_list):
+        self.detections_list = [Detection(bbox) for bbox in bbox_list]
+
+    def draw(self, frame):
+        for detection in self.detections_list:
+            detection.draw_bbox(frame)
+
+    def all_marked(self):
+        for detection in self.detections_list:
+            if not detection.is_marked:
+                return False
+        return True
+
+    def point_in_unmarked_detection_box(self, point):
+        """
+        Functions returns true if the given point is contained with a detection object
+        which is yet unmarked.
+        Returns False otherwise.
+        :param point: (tuple) the point (x, y), the click coordinates
+        :return: (boolean)
+        """
+        for detection in self.detections_list:
+            if detection.point_in_box(point):
+                if detection.is_marked:
+                    return False
+                else:
+                    return True
+        return False
+
+    def get_detection_containing_point(self, point):
+        """
+        Given a point (x, y), return the detection object which contains the point.
+        If no detection contains the point, return None
+        :param point: (tuple) point (x, y), the click coordinates
+        :return: (Detection) the detection containing point (else None)
+        """
+        for detection in self.detections_list:
+            if detection.point_in_box(point):
+                return detection
+        return None
+
+    def validate_and_update_id(self, point, label):
+        detection_containing_point = self.get_detection_containing_point(point)
+
+        if detection_containing_point is None:
+            return False
+        else:
+            if type(label) == int:
+                detection_containing_point.label = label
+                detection_containing_point.is_marked = True
+                return True
+            else:
+                # TODO Give an option to mark non-tank detections as null
+                return False
+
+    def reset(self):
+        """
+        Resets all detections to default state in the detections_list.
+        All labels are removed and all detections are unmarked.
+        [Use this if the user wants to reset the frame back to its original state.]
+        :return: (None)
+        """
+        for detection in self.detections_list:
+            detection.reset()
+
+
+
+
+
