@@ -12,6 +12,7 @@ from tkinter import filedialog
 from tkinter import scrolledtext as sct
 import cv2
 
+
 class Track_Label_GUI(object):
 
     def __init__(self):
@@ -47,24 +48,23 @@ class Track_Label_GUI(object):
         # features and labels related initializations
         self._boxes = None
         self._label_list = []
-        self._labelled_boxes = [] # boxes that have been labelled
+        self._labelled_boxes = []  # boxes that have been labelled
 
         # certain label txt related variables
         self._label_folder = './Labels'
         self._videos_folder = './Videos'
         self._video_file_path = None
-        return None
 
     def _initialize_tab_control(self):
         self._tabcontrol = ttk.Notebook(self._root)
         self._track_label_tab = tk.Frame(self._tabcontrol)
         self._tabcontrol.add(self._track_label_tab, text="Track Labelling")
-        self._tabcontrol.pack(expand=1,fill='both')
+        self._tabcontrol.pack(expand=1, fill='both')
         return None
 
     # initializes the main UI display
     def _initialize_labeller_tab(self):
-        self._mainUIFrame = ttk.Labelframe(self._track_label_tab, width = self._width, height=self._height)
+        self._mainUIFrame = ttk.Labelframe(self._track_label_tab, width=self._width, height=self._height)
         self._mainUIFrame.grid(row=0, column=0)
 
         # main image label
@@ -93,15 +93,15 @@ class Track_Label_GUI(object):
             # writes the previous information into the file
             self._write_into_file()
         else:
-            msg.showinfo('Unfinished labelling','There are Detections yet to be labelled')
+            msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
             return None
         # checks if there are any valid frames
-        if self._frame_num > (self._NUM_OF_VID_FRAMES):
-            msg.showinfo('Frame does not exist', 'This application has not been designed to rupture the space-time continuum')
+        if self._frame_num > self._NUM_OF_VID_FRAMES:
+            msg.showinfo('Frame does not exist',
+                         'This application has not been designed to rupture the space-time continuum')
             return None
 
-
-        # retrives the next frame
+        # retrieves the next frame
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
@@ -115,7 +115,8 @@ class Track_Label_GUI(object):
     # gets the previous frame, runs it through the detector, displays it
     def _get_previous_frame(self):
         if self._frame_num < 1:
-            msg.showinfo('Frame does not exist', 'This application has not been designed to rupture the space-time continuum')
+            msg.showinfo('Frame does not exist',
+                         'This application has not been designed to rupture the space-time continuum')
             return None
         self._frame_num -= 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
@@ -126,7 +127,6 @@ class Track_Label_GUI(object):
 
         self._display_frame(frame)
         return None
-
 
     # funtion that writes into file
     def _write_into_file(self):
@@ -163,7 +163,7 @@ class Track_Label_GUI(object):
     def _initialize_child(self):
 
         # declare a child frame that contains all widgets
-        self._childFrame = ttk.Labelframe(self._child_root, width = self._width, height=self._height)
+        self._childFrame = ttk.Labelframe(self._child_root, width=self._width, height=self._height)
         self._childFrame.grid(row=0, column=0)
 
         # a text box to take in track id
@@ -187,7 +187,7 @@ class Track_Label_GUI(object):
             self._label_list.append(int(self._track_textbox.get()))
             self._child_root.destroy()
         except:
-            msg.showinfo('Invalid Input','Tracklet number have to be integers ')
+            msg.showinfo('Invalid Input', 'Tracklet number have to be integers ')
 
     # detects the tanks and display them
     def _display_frame(self, frame):
@@ -195,8 +195,8 @@ class Track_Label_GUI(object):
         confidence_list, boxes, frame = self._detector.detect(frame, draw=False)
         self._boxes = boxes
         for box in boxes:
-            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255,255,255], 2)
-        print(boxes) # DEBUGGING PRINT
+            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
+        print(boxes)  # DEBUGGING PRINT
 
         # switch to RGB format
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -211,7 +211,6 @@ class Track_Label_GUI(object):
         # store the reference to the image so that Python's gc doesn't erase the image
         self._image_label.image = image
         return None
-
 
     def _point_in_box(self, point, box):
         """ returns the clicked region of interest
@@ -243,12 +242,11 @@ class Track_Label_GUI(object):
             os.makedirs(self._label_folder)
         if not os.path.exists(self._videos_folder):
             os.makedirs(self._videos_folder)
-        self._video_file_path = os.path.join(self._label_folder, video_file+'_label.txt')
+        self._video_file_path = os.path.join(self._label_folder, video_file + '_label.txt')
         with open(self._video_file_path, 'w') as f:
             text = "frameID, detection_list, label_list\n"
             f.write(text)
         return None
-
 
     def run(self):
         self._root.mainloop()
@@ -256,7 +254,6 @@ class Track_Label_GUI(object):
 
     def release(self):
         self._vidcap.release()
-        self._vidcap.read
 
 
 if __name__ == "__main__":

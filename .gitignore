@@ -1,1 +1,6 @@
 .ycm*
+.*/
+Labels/
+Videos/
+/tiny_yolo/
+!/tiny_yolo/TinyYoloDetection.py
