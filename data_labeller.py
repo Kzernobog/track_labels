@@ -136,6 +136,7 @@ class Track_Label_GUI(object):
 
         self._boxes = None
         self._label_list = []
+        self._labelled_boxes = []
         return None
 
     # click event handler function
@@ -145,15 +146,17 @@ class Track_Label_GUI(object):
         point = (x, y)
         roi_list = self._boxes
         if len(self._boxes) > 0:
+            inside_detection = False
             for roi in roi_list:
                 if self._point_in_box(point, roi):
+                    inside_detection = True
                     self._child_root = tk.Tk()
                     self._child_root.title("Labelling Window")
                     self._initialize_child()
                     self._child_root.mainloop()
                     self._labelled_boxes.append(roi)
-                else:
-                    msg.showinfo('Invalid selection', 'Click inside a detection box')
+            if not inside_detection:
+                msg.showinfo('Invalid selection', 'Click inside a detection box')
         return None
 
     # UI element that is responsible for asking detection labels from the user
