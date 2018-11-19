@@ -83,7 +83,8 @@ class Track_Label_GUI(object):
         self._load_next_frame_btn.grid(row=0, column=4, sticky=tk.E)
 
         # button to load next frame
-        # self._load_previous_frame_btn = ttk.Button(self._mainUIFrame, text="Previous", command=self._get_previous_frame)
+        # self._load_previous_frame_btn = ttk.Button(self._mainUIFrame,
+        #                                            text="Previous", command=self._get_previous_frame)
         # self._load_previous_frame_btn.grid(row=0, column=3, sticky=tk.E)
         return None
 
@@ -128,7 +129,7 @@ class Track_Label_GUI(object):
         self._display_frame(frame)
         return None
 
-    # funtion that writes into file
+    # function that writes into file
     def _write_into_file(self):
         text = "{},{},{}\n".format(self._frame_num, self._labelled_boxes, self._label_list)
         with open(self._video_file_path, 'a') as f:
@@ -214,10 +215,10 @@ class Track_Label_GUI(object):
 
     def _point_in_box(self, point, box):
         """ returns the clicked region of interest
-        params: point - a tuple consisting of the mouseevent pixel coordinate
+        params: point - a tuple consisting of the mouse event pixel coordinate
         return: True/False - a boolean"""
         (x, y) = point
-        if (x > box[0] and x < box[2] and y > box[1] and y < box[3]):
+        if box[0] < x < box[2] and box[1] < y < box[3]:
             return True
         else:
             return False
@@ -230,7 +231,7 @@ class Track_Label_GUI(object):
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, frame = self._vidcap.read()
         if not ok:
-            print("frame retrieval not successfull")
+            print("frame retrieval not successful")
             sys.exit()
 
         # get and display detections
