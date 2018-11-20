@@ -7,7 +7,9 @@ class DetectionList:
 
     def draw(self, frame):
         for detection in self.detections_list:
-            detection.draw_bbox(frame)
+            frame = detection.draw_bbox(frame)
+
+        return frame
 
     def all_marked(self):
         for detection in self.detections_list:

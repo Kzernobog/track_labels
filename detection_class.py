@@ -8,6 +8,7 @@ class Detection:
         self.is_marked = False  # true if box is labelled and false otherwise
 
     def draw_bbox(self, frame):
+        frame = frame.copy()
         x_min, y_min, x_max, y_max = self.bbox
 
         if self.label is None:
@@ -30,6 +31,8 @@ class Detection:
             text_size = 0.5
             cv2.putText(frame, label_text, (x_min, y_min - 5), cv2.FONT_HERSHEY_SIMPLEX, text_size,
                         text_colour, 1, cv2.LINE_AA)
+
+        return frame
 
     def point_in_box(self, point):
         """ returns the clicked region of interest
