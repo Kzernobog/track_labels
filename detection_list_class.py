@@ -73,7 +73,7 @@ class DetectionList:
         if detection_containing_point is None:
             return False
         else:
-            if type(label) == int:
+            if type(label) is int:
                 detection_containing_point.label = label
                 detection_containing_point.is_marked = True
                 return True
