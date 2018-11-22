@@ -6,12 +6,22 @@ class DetectionList:
         self.detections_list = [Detection(bbox) for bbox in bbox_list]
 
     def draw(self, frame):
+        """
+        Returns a new frame which has bounding boxes drawn for all detections.
+        :param frame: the base image frame on which boxes are drawn
+        :return: a frame on which boxes are drawn
+        """
         for detection in self.detections_list:
             frame = detection.draw_bbox(frame)
 
         return frame
 
     def all_marked(self):
+        """
+        Checks if all the detections in the detection list are marked.
+        Detections are considered marked if a label has been assigned to them.
+        :return: (bool) True if all marked and False otherwise
+        """
         for detection in self.detections_list:
             if not detection.is_marked:
                 return False
@@ -46,6 +56,18 @@ class DetectionList:
         return None
 
     def validate_and_update_id(self, point, label):
+        """
+        Given a point (x, y) which are the click coordinates and a label,
+        checks if the point belongs to some detection, and if so,
+        changes its id accordingly and returns True.
+
+        If this could not be done because the label was bad or because the point
+        did not belong to any detection, the detection list is unchanged and
+        the functions returns False
+        :param point: (tuple) (x, y) representing click coordinates
+        :param label: (int) a label to identify the tank
+        :return: (bool) True if update successful and False otherwise
+        """
         detection_containing_point = self.get_detection_containing_point(point)
 
         if detection_containing_point is None:
