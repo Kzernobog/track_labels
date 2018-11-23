@@ -52,7 +52,7 @@ def ask_id(detection: Detection):
     entered_id = id_window.entered_number
 
     # TODO DEBUG
-    print("Value entered is: {}".format(entered_id))
+    # print("Value entered is: {}".format(entered_id))
 
     if entered_id is not None:
         detection.label = entered_id

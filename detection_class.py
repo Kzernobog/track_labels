@@ -6,7 +6,6 @@ class Detection:
     def __init__(self, bbox: List[int]):
         self.bbox = bbox  # [x_min, y_min, x_max, y_max] the detection list
         self.label = None  # an id to mark the detection box
-        self.is_marked = False  # true if box is labelled and false otherwise
 
     def draw_bbox(self, frame):
         frame = frame.copy()
@@ -48,4 +47,3 @@ class Detection:
 
     def reset(self):
         self.label = None
-        self.is_marked = False

@@ -13,6 +13,8 @@ import cv2
 
 import tiny_yolo.TinyYoloDetection as TY
 from detection_list_class import DetectionList
+from ask_id_window import ask_id
+
 
 class Track_Label_GUI(object):
 
@@ -48,7 +50,6 @@ class Track_Label_GUI(object):
         self._weight_path = "tiny_yolo/tiny-tank-yolo-mahesh_46800.weights"
         self._meta_path = "tiny_yolo/tank.data"
         self._detector = TY.YOLODetector(self._config_path, self._weight_path, self._meta_path)
-
 
         # features and labels related initializations
         # TODO OLD CODE
@@ -105,12 +106,19 @@ class Track_Label_GUI(object):
         #     self._write_into_file()
 
         # TODO NEW CODE
-        if self.detection_list.all_marked():
+        if self.detection_list.all_marked():  # if all detections have been labelled
             self._write_into_file()
 
-        else:
+        else:  # if detections are left which are yet to be labelled
+            # TODO DEBUG
+            for detection in self.detection_list.detections_list:
+                print("{},".format(detection.label), end=' ')
+            print('')
+
             msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
-            return None
+
+            return
+
         # checks if there are any valid frames
         if self._frame_num > self._NUM_OF_VID_FRAMES:
             msg.showinfo('Frame does not exist',
@@ -146,7 +154,9 @@ class Track_Label_GUI(object):
 
     # function that writes into file
     def _write_into_file(self):
-        text = "{},{},{}\n".format(self._frame_num, self._labelled_boxes, self._label_list)
+        bbox_list = self.detection_list.get_bbox_list()
+        labels_list = self.detection_list.get_labels_list()
+        text = "{},{},{}\n".format(self._frame_num, bbox_list, labels_list)
         with open(self._video_file_path, 'a') as f:
             f.write(text)
 
@@ -177,27 +187,13 @@ class Track_Label_GUI(object):
         #         msg.showinfo('Invalid selection', 'Click inside a detection box')
 
         # TODO NEW CODE
-        # TODO Handle case of emtpy detection list (when the frame has no tanks)
-        if self.detection_list.point_in_unmarked_detection_box(point):
-            # TODO Create an overlay window to accept id input
-            # creates a window where the user can enter tank id
-            self._child_root = tk.Tk()
-            self._child_root.title("Labelling Window")
-            self._initialize_child()
-            self._child_root.mainloop()
+        target_detection = self.detection_list.get_detection_containing_point(point)
 
-            # once the user enters tank id and preses Store, track_label is called
-
-            tank_id = int(self._track_text.get())
-            self.detection_list.validate_and_update_id(point, tank_id)
-
-            # frame on which marked and unmarked tanks are shown
-            drawn_frame = self.detection_list.draw(self.frame)
-            self._display_frame(drawn_frame)
-        else:
-            msg.showinfo("Invalid Selection", "Click inside an unmarked detection box.")
-
-        return None
+        if target_detection is not None:  # point belongs to a detection
+            ask_id(target_detection)
+        else:  # the click was outside a detection
+            msg.showerror("Click outside detection box",
+                          "Please click inside a detection box to enter its id.")
 
     # UI element that is responsible for asking detection labels from the user
     def _initialize_child(self):
