@@ -10,9 +10,10 @@ from tkinter import messagebox as msg
 from tkinter import filedialog
 from tkinter import scrolledtext as sct
 import cv2
-
+from DetectionTracker import Tracker as tracker
 import tiny_yolo.TinyYoloDetection as TY
 from detection_list_class import DetectionList
+
 
 class Track_Label_GUI(object):
 
@@ -31,7 +32,7 @@ class Track_Label_GUI(object):
         # class level attributes
         self._video_name = None
         self._vidcap = None
-
+        self.tracker_obj = tracker.Tracker(log=False)
         # the frame loaded from the video (this should always be unaltered)
         self.frame = None
 
@@ -44,11 +45,10 @@ class Track_Label_GUI(object):
         self._frame_num = 0
 
         # detector related initializations
-        self._config_path = "tiny_yolo/tiny-tank-yolo-mahesh.cfg"
-        self._weight_path = "tiny_yolo/tiny-tank-yolo-mahesh_46800.weights"
+        self._config_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct.cfg"
+        self._weight_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct_43400.weights"
         self._meta_path = "tiny_yolo/tank.data"
         self._detector = TY.YOLODetector(self._config_path, self._weight_path, self._meta_path)
-
 
         # features and labels related initializations
         # TODO OLD CODE
@@ -99,19 +99,7 @@ class Track_Label_GUI(object):
 
     # retrieves the next frame, runs it through the detector, displays it 
     def _get_next_frame(self):
-        # TODO OLD CODE
-        # if len(self._labelled_boxes) == len(self._boxes):
-        #     # writes the previous information into the file
-        #     self._write_into_file()
 
-        # TODO NEW CODE
-        if self.detection_list.all_marked():
-            self._write_into_file()
-
-        else:
-            msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
-            return None
-        # checks if there are any valid frames
         if self._frame_num > self._NUM_OF_VID_FRAMES:
             msg.showinfo('Frame does not exist',
                          'This application has not been designed to rupture the space-time continuum')
@@ -121,11 +109,52 @@ class Track_Label_GUI(object):
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, self.frame = self._vidcap.read()
+
+        # TODO OLD CODE
+        # if len(self._labelled_boxes) == len(self._boxes):
+        #     # writes the previous information into the file
+        #     self._write_into_file()
+        current_detected_list = []
+
+        # TODO NEW CODE
+        ## LEGEND: Not able to access next frame(removed the if statement that checks
+        # all ids are entered by the user)
+        # if self.detection_list.all_marked():
+        # self._write_into_file()
+        # run it through the detector
+        # TODO move detection logic outside _display_frame()
+        confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
+        self.detection_list = DetectionList(boxes)
+        current_detected_list = self.detection_list.get_bbox_list(self.detection_list.detections_list)
+
+        tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
+
+        # TODO OLD CODE
+        # self._boxes = boxes
+        # for box in boxes:
+        #     cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
+        # print(boxes)  # DEBUGGING PRINT
+
+        # TODO NEW CODE
+
+        for idx, detection in enumerate(self.detection_list.detections_list):
+            detection.label = tracklet_id[idx]
+
+        frame = self.detection_list.draw(frame)
+        self._display_frame(frame)
+
+        print(tracklet_id)
+        # else:
+        #     msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
+        #     return None
+        # # checks if there are any valid frames
+
+
         if not ok:
             print("frame retrieval unsuccessful")
             sys.exit()
 
-        self._display_frame(self.frame)
+        # self._display_frame(self.frame)
         return None
 
     # gets the previous frame, runs it through the detector, displays it
@@ -242,19 +271,6 @@ class Track_Label_GUI(object):
 
     # detects the tanks and display them
     def _display_frame(self, frame):
-        # run it through the detector
-        # TODO move detection logic outside _display_frame()
-        confidence_list, boxes, frame = self._detector.detect(frame, draw=False)
-
-        # TODO OLD CODE
-        # self._boxes = boxes
-        # for box in boxes:
-        #     cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
-        # print(boxes)  # DEBUGGING PRINT
-
-        # TODO NEW CODE
-        self.detection_list = DetectionList(boxes)
-        frame = self.detection_list.draw(frame)
 
         # switch to RGB format
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -291,9 +307,37 @@ class Track_Label_GUI(object):
         if not ok:
             print("frame retrieval not successful")
             sys.exit()
+            #     self._write_into_file()
+        current_detected_list = []
 
-        # get and display detections
-        self._display_frame(self.frame)
+        # TODO NEW CODE
+        ## LEGEND: Not able to access next frame(removed the if statement that checks
+        # all ids are entered by the user)
+        # if self.detection_list.all_marked():
+        # self._write_into_file()
+        # run it through the detector
+        # TODO move detection logic outside _display_frame()
+        confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
+        self.detection_list = DetectionList(boxes)
+
+        for detection in self.detection_list.detections_list:
+            current_detected_list.append(detection.bbox)
+
+        tracklet_id = self.tracker_obj.start_tracking(current_detected_list.copy(), None)
+
+        # TODO OLD CODE
+        # self._boxes = boxes
+        # for box in boxes:
+        #     cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
+        # print(boxes)  # DEBUGGING PRINT
+
+        # TODO NEW CODE
+
+        for idx, detection in enumerate(self.detection_list.detections_list):
+            detection.label = tracklet_id[idx]
+
+        frame = self.detection_list.draw(frame)
+        self._display_frame(frame)
 
         # creates a .txt file for writing
         video_file = self._video_name.split('/')[-1].split('.')[0]

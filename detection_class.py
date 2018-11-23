@@ -13,7 +13,7 @@ class Detection:
 
         if self.label is None:
             # draw a thin white box
-            colour = (0, 0, 0)
+            colour = (0, 255, 0)
             box_thickness = 1
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
