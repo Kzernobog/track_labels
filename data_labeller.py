@@ -92,10 +92,14 @@ class TrackLabelGUI(object):
     def _get_next_frame(self):
         # TODO add check for unique labels
         if self.detection_list.all_labeled():  # if all detections have been labelled
-            self._write_into_file()
+            if self.detection_list.labels_are_unique():
+                self._write_into_file()
+            else:  # labels are not unique
+                msg.showerror("Repeating labels", "All the labels must be unique.")
+                return
 
         else:  # if detections are left which are yet to be labelled
-            msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
+            msg.showerror('Unfinished labelling', 'There are Detections yet to be labelled')
             return
 
         # checks if there are any valid frames
@@ -120,22 +124,12 @@ class TrackLabelGUI(object):
 
         self.detection_list = DetectionList(boxes)
 
-        # TODO OLD CODE
-        # current_detected_list = self.detection_list.get_bbox_list()
-        #
-        # tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
-        #
-        # for idx, detection in enumerate(self.detection_list.detections_list):
-        #     detection.label = tracklet_id[idx]
-
-        # TODO NEW CODE
         current_detected_list = self.detection_list.get_bbox_list()
 
         labels_list = self.tracker_obj.get_labels(current_detected_list)
 
         for idx, detection in enumerate(self.detection_list.detections_list):
             detection.label = labels_list[idx]
-
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
