@@ -2,19 +2,16 @@ import math
 import cv2
 import numpy as np
 
-
 from queue import Queue
 
 
 class Tracklet:
 
     # TODO: pass anglular position to tracklet
-    def __init__(self, initial_bbox, timestamp, tracklet_id):
+    def __init__(self, initial_bbox, tracklet_id):
         self.queue_length = 40
         self.bbox_queue: Queue = Queue(self.queue_length)
         self.bbox_queue.put(initial_bbox)
-        self.timestamp_queue: Queue = Queue(self.queue_length)
-        self.timestamp_queue.put(timestamp)
         self.gamma = 0
         self.tracklet_id = tracklet_id
 
@@ -28,8 +25,6 @@ class Tracklet:
     def update_tracklet(self, current_bbox, current_timestamp):
 
         self.push(self.bbox_queue, current_bbox)
-
-        self.push(self.timestamp_queue, current_timestamp)
 
     def calc_iou_score(self, bbox):
         bbox_list = list(self.bbox_queue.queue)
@@ -57,8 +52,6 @@ class Tracklet:
         return iou
 
 
-
-    # TODO: take atgm_state
     def draw_tracking_bbox(self, frame, debug=False, box_thickness=2):
         """
 
@@ -70,7 +63,7 @@ class Tracklet:
         Marks the box with the tracklet id
         If it is a ghost box, its velocity is shown at the bottom left of the box
         """
-        velocity = None
+
 
         bbox_list = list(self.bbox_queue.queue)
 
