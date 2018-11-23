@@ -4,8 +4,8 @@ from typing import List
 
 class Detection:
     def __init__(self, bbox: List[int]):
-        self.bbox = bbox  # [x_min, y_min, x_max, y_max] the detection list
-        self.label = None  # an id to mark the detection box
+        self.bbox: List[int] = bbox  # [x_min, y_min, x_max, y_max] the detection list
+        self.label: int = None  # an id to mark the detection box
 
     def draw_bbox(self, frame):
         frame = frame.copy()
@@ -21,7 +21,7 @@ class Detection:
             # TODO Provide an option for drawing black boxes for non-tank objects
             # draw a slightly thicker red box
             # TODO use different colours for each box (perhaps choosing them randomly)
-            colour = (0, 0, 255)
+            colour = (0, 255, 0)
             box_thickness = 2
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 

@@ -16,13 +16,12 @@ from detection_list_class import DetectionList
 from ask_id_window import ask_id
 
 
-
-class Track_Label_GUI(object):
+class TrackLabelGUI(object):
 
     def __init__(self):
         self._root = tk.Tk()
         self._child_root = None
-        self._root.title("Labeller")
+        self._root.title("Track Label")
         self._width = 720
         self._height = 480
 
@@ -35,12 +34,13 @@ class Track_Label_GUI(object):
         self._video_name = None
         self._vidcap = None
         self.tracker_obj = tracker.Tracker(log=False)
+
         # the frame loaded from the video (this should always be unaltered)
         self.frame = None
 
         # initialize a few UI features
         self._initialize_tab_control()
-        self._initialize_labeller_tab()
+        self._initialize_labeler_tab()
 
         # video related variables
         self._NUM_OF_VID_FRAMES = None
@@ -50,16 +50,9 @@ class Track_Label_GUI(object):
         self._config_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct.cfg"
         self._weight_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct_43400.weights"
         self._meta_path = "tiny_yolo/tank.data"
+
         self._detector = TY.YOLODetector(self._config_path, self._weight_path, self._meta_path)
 
-
-        # features and labels related initializations
-        # TODO OLD CODE
-        # self._boxes = None
-        # self._label_list = []
-        # self._labelled_boxes = []  # boxes that have been labelled
-
-        # TODO NEW CODE
         self.detection_list: DetectionList = None
 
         # certain label txt related variables
@@ -75,7 +68,7 @@ class Track_Label_GUI(object):
         return None
 
     # initializes the main UI display
-    def _initialize_labeller_tab(self):
+    def _initialize_labeler_tab(self):
         self._mainUIFrame = ttk.Labelframe(self._track_label_tab, width=self._width, height=self._height)
         self._mainUIFrame.grid(row=0, column=0)
 
@@ -94,27 +87,15 @@ class Track_Label_GUI(object):
         self._load_next_frame_btn = ttk.Button(self._mainUIFrame, text="Next", command=self._get_next_frame)
         self._load_next_frame_btn.grid(row=0, column=4, sticky=tk.E)
 
-        # button to load next frame
-        # self._load_previous_frame_btn = ttk.Button(self._mainUIFrame,
-        #                                            text="Previous", command=self._get_previous_frame)
-        # self._load_previous_frame_btn.grid(row=0, column=3, sticky=tk.E)
         return None
 
     # retrieves the next frame, runs it through the detector, displays it 
     def _get_next_frame(self):
-        # TODO OLD CODE
-        # if len(self._labelled_boxes) == len(self._boxes):
-        #     # writes the previous information into the file
-        #     self._write_into_file()
-
-        # TODO NEW CODE
         if self.detection_list.all_marked():  # if all detections have been labelled
             self._write_into_file()
 
         else:  # if detections are left which are yet to be labelled
-
             msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
-
             return
 
         # checks if there are any valid frames
@@ -128,32 +109,11 @@ class Track_Label_GUI(object):
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, self.frame = self._vidcap.read()
 
-        # TODO OLD CODE
-        # if len(self._labelled_boxes) == len(self._boxes):
-        #     # writes the previous information into the file
-        #     self._write_into_file()
-        current_detected_list = []
-
-        # TODO NEW CODE
-        ## LEGEND: Not able to access next frame(removed the if statement that checks
-        # all ids are entered by the user)
-        # if self.detection_list.all_marked():
-        # self._write_into_file()
-        # run it through the detector
-        # TODO move detection logic outside _display_frame()
         confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
         self.detection_list = DetectionList(boxes)
         current_detected_list = self.detection_list.get_bbox_list()
 
         tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
-
-        # TODO OLD CODE
-        # self._boxes = boxes
-        # for box in boxes:
-        #     cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
-        # print(boxes)  # DEBUGGING PRINT
-
-        # TODO NEW CODE
 
         for idx, detection in enumerate(self.detection_list.detections_list):
             detection.label = tracklet_id[idx]
@@ -161,33 +121,10 @@ class Track_Label_GUI(object):
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
 
-        print(tracklet_id)
-        # else:
-        #     msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
-        #     return None
-        # # checks if there are any valid frames
-
-
         if not ok:
             print("frame retrieval unsuccessful")
             sys.exit()
 
-        return None
-
-    # gets the previous frame, runs it through the detector, displays it
-    def _get_previous_frame(self):
-        if self._frame_num < 1:
-            msg.showinfo('Frame does not exist',
-                         'This application has not been designed to rupture the space-time continuum')
-            return None
-        self._frame_num -= 1
-        self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
-        ok, self.frame = self._vidcap.read()
-        if not ok:
-            print("frame retrieval unsuccessful")
-            sys.exit()
-
-        self._display_frame(self.frame)
         return None
 
     # function that writes into file
@@ -198,9 +135,6 @@ class Track_Label_GUI(object):
         with open(self._video_file_path, 'a') as f:
             f.write(text)
 
-        self._boxes = None
-        self._label_list = []
-        self._labelled_boxes = []
         return None
 
     # click event handler function
@@ -209,73 +143,27 @@ class Track_Label_GUI(object):
         y = event.y
         point = (x, y)
 
-        # TODO OLD CODE
-        # roi_list = self._boxes
-        # if len(self._boxes) > 0:
-        #     inside_detection = False
-        #     for roi in roi_list:
-        #         if self._point_in_box(point, roi):
-        #             inside_detection = True
-        #             self._child_root = tk.Tk()
-        #             self._child_root.title("Labelling Window")
-        #             self._initialize_child()
-        #             self._child_root.mainloop()
-        #             self._labelled_boxes.append(roi)
-        #     if not inside_detection:
-        #         msg.showinfo('Invalid selection', 'Click inside a detection box')
-
-        # TODO NEW CODE
+        # get the detection to which the point belongs
         target_detection = self.detection_list.get_detection_containing_point(point)
 
         if target_detection is not None:  # point belongs to a detection
             ask_id(target_detection)
+
+            # redraw frame and show in GUI
+            drawn_frame = self.detection_list.draw(self.frame)
+            self._display_frame(drawn_frame)
+
         else:  # the click was outside a detection
             msg.showerror("Click outside detection box",
                           "Please click inside a detection box to enter its id.")
 
-    # UI element that is responsible for asking detection labels from the user
-    def _initialize_child(self):
-
-        # declare a child frame that contains all widgets
-        self._childFrame = ttk.Labelframe(self._child_root, width=self._width, height=self._height)
-        self._childFrame.grid(row=0, column=0)
-
-        # a text box to take in track id
-        self._track_text = tk.StringVar()
-        self._track_textbox = ttk.Entry(self._childFrame, textvariable=self._track_text)
-        self._track_textbox.grid(row=0, column=0, columnspan=2, sticky=tk.W)
-
-        # button to store
-        self._track_label_btn = ttk.Button(self._childFrame, text='Store', command=self._track_label)
-        self._track_label_btn.grid(row=0, column=2, sticky=tk.E)
-
-        # setting focus
-        self._track_textbox.focus()
-
-        return None
-
-    # appends the label into a data structure
-    def _track_label(self):
-
-        # TODO OLD CODE
-        # try:
-        #     print(int(self._track_textbox.get()))
-        #     self._label_list.append(int(self._track_textbox.get()))
-        #     self._child_root.destroy()
-        # except:
-        #     msg.showinfo('Invalid Input', 'Tracklet number have to be integers ')
-
-        # TODO NEW CODE
-        id_string = self._track_textbox.get()
-
-        # if id is an integer, accept it, else show error message
-        if id_string.isdigit():
-            self._child_root.destroy()
-        else:
-            msg.showinfo('Invalid Input', 'Tracklet number have to be non-negative integers ')
-
     # detects the tanks and display them
     def _display_frame(self, frame):
+        """
+        Displays the frame provided on the GUI.
+        :param frame: image to be displayed
+        :return: (None)
+        """
 
         # switch to RGB format
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -291,17 +179,6 @@ class Track_Label_GUI(object):
         self._image_label.image = image
         return None
 
-    # TODO OLD CODE (the func can be removed)
-    # def _point_in_box(self, point, box):
-    #     """ returns the clicked region of interest
-    #     params: point - a tuple consisting of the mouse event pixel coordinate
-    #     return: True/False - a boolean"""
-    #     (x, y) = point
-    #     if box[0] < x < box[2] and box[1] < y < box[3]:
-    #         return True
-    #     else:
-    #         return False
-
     def _load_video(self):
         self._video_name = tk.filedialog.askopenfilename()
         self._vidcap = cv2.VideoCapture(self._video_name)
@@ -309,19 +186,14 @@ class Track_Label_GUI(object):
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, self.frame = self._vidcap.read()
+
         if not ok:
             print("frame retrieval not successful")
             sys.exit()
             #     self._write_into_file()
+
         current_detected_list = []
 
-        # TODO NEW CODE
-        ## LEGEND: Not able to access next frame(removed the if statement that checks
-        # all ids are entered by the user)
-        # if self.detection_list.all_marked():
-        # self._write_into_file()
-        # run it through the detector
-        # TODO move detection logic outside _display_frame()
         confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
         self.detection_list = DetectionList(boxes)
 
@@ -329,14 +201,6 @@ class Track_Label_GUI(object):
             current_detected_list.append(detection.bbox)
 
         tracklet_id = self.tracker_obj.start_tracking(current_detected_list.copy(), None)
-
-        # TODO OLD CODE
-        # self._boxes = boxes
-        # for box in boxes:
-        #     cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), [255, 255, 255], 2)
-        # print(boxes)  # DEBUGGING PRINT
-
-        # TODO NEW CODE
 
         for idx, detection in enumerate(self.detection_list.detections_list):
             detection.label = tracklet_id[idx]
@@ -365,5 +229,5 @@ class Track_Label_GUI(object):
 
 
 if __name__ == "__main__":
-    tracking = Track_Label_GUI()
+    tracking = TrackLabelGUI()
     tracking.run()

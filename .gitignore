@@ -10,6 +10,8 @@ Videos/
 # Stuff inside tiny_yolo folder (like weights, dlls, etc), but excluding any python files
 /tiny_yolo/
 !/tiny_yolo/*.py
+
+# linux uses darknet.so for detection
 *.so
 
 # Any markdown files which contain notes
