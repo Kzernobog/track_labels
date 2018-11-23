@@ -16,7 +16,7 @@ class DetectionList:
 
         return frame
 
-    def all_marked(self):
+    def all_labeled(self):
         """
         Checks if all the detections in the detection list are marked.
         Detections are considered marked if a label has been assigned to them.

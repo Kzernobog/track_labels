@@ -20,7 +20,6 @@ class TrackLabelGUI(object):
 
     def __init__(self):
         self._root = tk.Tk()
-        self._child_root = None
         self._root.title("Track Label")
         self._width = 720
         self._height = 480
@@ -33,6 +32,7 @@ class TrackLabelGUI(object):
         # class level attributes
         self._video_name = None
         self._vidcap = None
+
         self.tracker_obj = tracker.Tracker(log=False)
 
         # the frame loaded from the video (this should always be unaltered)
@@ -50,7 +50,6 @@ class TrackLabelGUI(object):
         self._config_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct.cfg"
         self._weight_path = "tiny_yolo/tiny-tank-yolo-mhm_31_Oct_43400.weights"
         self._meta_path = "tiny_yolo/tank.data"
-
         self._detector = TY.YOLODetector(self._config_path, self._weight_path, self._meta_path)
 
         self.detection_list: DetectionList = None
@@ -91,7 +90,8 @@ class TrackLabelGUI(object):
 
     # retrieves the next frame, runs it through the detector, displays it 
     def _get_next_frame(self):
-        if self.detection_list.all_marked():  # if all detections have been labelled
+        # TODO add check for unique labels
+        if self.detection_list.all_labeled():  # if all detections have been labelled
             self._write_into_file()
 
         else:  # if detections are left which are yet to be labelled
@@ -104,19 +104,38 @@ class TrackLabelGUI(object):
                          'This application has not been designed to rupture the space-time continuum')
             return None
 
+        # update the tracklet with detections and labels
+        current_detected_list = self.detection_list.get_bbox_list()
+        labels_list = self.detection_list.get_labels_list()
+
+        # new tracklets are created with given labels
+        self.tracker_obj.update_frame(current_detected_list, labels_list)
+
         # retrieves the next frame
         self._frame_num += 1
         self._vidcap.set(cv2.CAP_PROP_POS_FRAMES, self._frame_num - 1)
         ok, self.frame = self._vidcap.read()
 
         confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
+
         self.detection_list = DetectionList(boxes)
+
+        # TODO OLD CODE
+        # current_detected_list = self.detection_list.get_bbox_list()
+        #
+        # tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
+        #
+        # for idx, detection in enumerate(self.detection_list.detections_list):
+        #     detection.label = tracklet_id[idx]
+
+        # TODO NEW CODE
         current_detected_list = self.detection_list.get_bbox_list()
 
-        tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
+        labels_list = self.tracker_obj.get_labels(current_detected_list)
 
         for idx, detection in enumerate(self.detection_list.detections_list):
-            detection.label = tracklet_id[idx]
+            detection.label = labels_list[idx]
+
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
@@ -190,20 +209,16 @@ class TrackLabelGUI(object):
         if not ok:
             print("frame retrieval not successful")
             sys.exit()
-            #     self._write_into_file()
-
-        current_detected_list = []
 
         confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
+
         self.detection_list = DetectionList(boxes)
 
-        for detection in self.detection_list.detections_list:
-            current_detected_list.append(detection.bbox)
+        current_detected_list = self.detection_list.get_bbox_list()
+        labels_list = self.detection_list.get_labels_list()
 
-        tracklet_id = self.tracker_obj.start_tracking(current_detected_list.copy(), None)
-
-        for idx, detection in enumerate(self.detection_list.detections_list):
-            detection.label = tracklet_id[idx]
+        # new tracklets are created with given labels
+        self.tracker_obj.update_frame(current_detected_list, labels_list)
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
