@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from detection_class import Detection
 
 
 class IdWindow(tk.Toplevel):
@@ -26,7 +27,6 @@ class IdWindow(tk.Toplevel):
         ok_button.grid(row=0, column=0)
         self.grab_set()
 
-
     def on_press_ok(self):
         # check if the label entered for detection is proper
         label_string = self.num_str.get()
@@ -38,12 +38,35 @@ class IdWindow(tk.Toplevel):
             self.destroy()
 
 
-def launch_top_level():
+def ask_id(detection: Detection):
+    """
+    Used to update the label of a detection from user input.
+    Causes a GUI to be displayed which ask for a positive integer.
+    Uses this to update the label.
+
+    If the GUI is closed, the detection's label is NOT changed.
+    :return: (None)
+    """
     id_window = IdWindow()
     id_window.wait_window()
-    print("The entered number is {}.".format(id_window.entered_number))
-    return id_window.entered_number
+    entered_id = id_window.entered_number
 
-win = tk.Tk()
-tk.Button(win, text="Click Me", command = launch_top_level).pack()
-win.mainloop()
+    # TODO DEBUG
+    print("Value entered is: {}".format(entered_id))
+
+    if entered_id is not None:
+        detection.label = entered_id
+
+
+def ask_id_test():
+    detection = Detection([0, 0, 0, 0])
+    detection.label = 1
+    print("Initial label for the detection: {}".format(detection.label))
+    ask_id(detection)
+    print("Final value of the detection: {}".format(detection.label))
+
+
+if __name__ == '__main__':
+    win = tk.Tk()
+    tk.Button(win, text="Click Me", command=ask_id_test).pack()
+    win.mainloop()
