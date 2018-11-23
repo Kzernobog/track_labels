@@ -143,7 +143,7 @@ class Track_Label_GUI(object):
         # TODO move detection logic outside _display_frame()
         confidence_list, boxes, frame = self._detector.detect(self.frame.copy(), draw=False)
         self.detection_list = DetectionList(boxes)
-        current_detected_list = self.detection_list.get_bbox_list(self.detection_list.detections_list)
+        current_detected_list = self.detection_list.get_bbox_list()
 
         tracklet_id = self.tracker_obj.update_frame(current_detected_list.copy(), None)
 

@@ -54,14 +54,6 @@ class DetectionList:
             if detection.point_in_box(point):
                 return detection
         return None
-    def get_bbox_list(self,detections_list):
-
-        current_detected_list = []
-
-        for detection in detections_list:
-            current_detected_list.append(detection.bbox)
-
-        return current_detected_list
 
     def validate_and_update_id(self, point, label):
         """
