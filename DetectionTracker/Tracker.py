@@ -23,63 +23,38 @@ class Tracker:
         self.frame_score = ""
         self.gamma_threshold = 5
 
-    def start_tracking(self, current_detected_list, timestamp):
-        '''
 
-        :param current_detected_list:
-        :param timestamp:
-        :param selected_bbox:
-        :param atgm_state: (dict) {'zoom':<int>, 'azimuth':<float>, 'elevation':<float>}
-        :return:
-        '''
-        # pdb.set_trace()
-        tracklet_id_list = []
-        if self.tracklet_list != None:
-            self.tracklet_list = None
-            self.id_iterator = _IdIterator()
-        if len(current_detected_list) > 0:
-            self.tracklet_list = []
-            for current_detection in current_detected_list:
-                # Converting steps to angles
-                # atgm_state = atgm_state.copy()
-                # atgm_state['azimuth'] /= 10421
-                # atgm_state['elevation']
-
-                self.tracklet_list += [DetectionTracker.Tracklet.Tracklet
-                                       (current_detection, timestamp, next(self.id_iterator))]
-                tracklet_id_list.append(self.tracklet_list[-1].tracklet_id)
+    def update_frame(self, current_detected_list, labels_list):
+        for idx,current_detection in enumerate(current_detected_list):
+            self.tracklet_list += [DetectionTracker.Tracklet.Tracklet
+                                   (current_detection,labels_list[idx])]
 
 
-        else:
-            raise ValueError("Detection list is empty")
-
-        return tracklet_id_list
-
-    def update_frame(self, current_detected_list, timestamp):
-        # Converting steps to angles
-        # atgm_state = atgm_state.copy()
-        # atgm_state['azimuth'] /= 10421
-        # atgm_state['elevation'] /= 22390
-        # Selected tracklet is set to none if tracking is lost
+    def get_labels(self,current_detected_list):
 
         tracklet_id_list = []
 
-        self._update_tracklets_with_detections(timestamp, current_detected_list.copy(), None)
-        for tracklet in self.tracklet_list:
-            bbox_list = list(tracklet.bbox_queue.queue)
-            for idx, detection in enumerate(current_detected_list):
+        self._update_tracklets_with_detections(current_detected_list.copy(), None)
+
+        for idx, detection in enumerate(current_detected_list):
+            detection_match = False
+            for tracklet in self.tracklet_list:
+                bbox_list = list(tracklet.bbox_queue.queue)
 
                 if (bbox_list[-1] == detection):
                     detection_index = idx
+                    detection_match = True
+                    tracklet_id_list.append(tracklet.tracklet_id)
+                    break
+            if detection_match==False:
+                tracklet_id_list.append(None)
 
-            if len(current_detected_list) > 0:
-                tracklet_id_list.append((tracklet.tracklet_id, detection_index))
-                tracklet_id_list = sorted(tracklet_id_list, key=lambda x: x[1])
-            else:
-                return None
-
+        if(len(current_detected_list)>0):
+            tracklet_id_list = [i[0] for i in tracklet_id_list]
         # if len(self.selected_tracklet.bbox_queue == None
-        return [i[0] for i in tracklet_id_list]
+
+        return tracklet_id_list
+
 
     def _create_frame_iterator(self, path):
         if os.path.isdir(path):  # is a folder (containing images)
@@ -94,36 +69,13 @@ class Tracker:
         else:  # is a video file
             self.frame_iterator = iter(_TimedVideoIterator(path))
 
-    def _update_single_tracklet(self, tracklet, current_detected_list, confidence_list, timestamp):
-
-        if len(current_detected_list) > 0:
-            scores_list = [tracklet.calc_iou_score(bbox) for bbox in current_detected_list]
-            best_idx, best_score = (max(enumerate(scores_list), key=operator.itemgetter(1)))
-
-            if best_score > self.score_threshold:  # if a score is good enough
-
-                current_bbox = current_detected_list[best_idx]
-                current_detected_list[best_idx] = None
-
-                if (confidence_list != None):
-                    current_confidence = confidence_list[best_idx]
-                    confidence_list[best_idx] = None
-
-                tracklet.update_tracklet(current_bbox, timestamp)
-            else:  # if no score is good enough
-                tracklet.calc_ghost_box_and_update(timestamp)  # do ghost update
-
-        else:  # if no detections are left unassigned in the current_detected_list
-            tracklet.calc_ghost_box_and_update(timestamp)  # do ghost update
-
-    def _update_tracklets_with_detections(self, timestamp, current_detected_list, confidence_list, debug=False):
+    def _update_tracklets_with_detections(self, current_detected_list, confidence_list, debug=False):
         """
         Using the provided detected list, the existing tracklets are updated. Any new tracklets that need to be
         made are also made.
-        :param timestamp: (float) epoch time
+
         :param current_detected_list: (list) list of bboxes
         :param confidence_list: (list) corresponding list of confidences
-        :param atgm_state: (dict) a dictionary containing state of atgm (zoom, azi, elev)
         :param debug: (bool) make true while debugging (internal use only)
         :return: (None)
         """
@@ -132,27 +84,27 @@ class Tracker:
         low_gamma_tracklet_list = []
         high_gamma_tracklet_list = []
         for tracklet in self.tracklet_list:
-            if tracklet.gamma >= 150:
-                if self.selected_tracklet == tracklet:
-                    self.selected_tracklet = None
-                self.tracklet_list.remove(tracklet)
+            # if tracklet.gamma >= 150:
+            #     if self.selected_tracklet == tracklet:
+            #         self.selected_tracklet = None
+            #     self.tracklet_list.remove(tracklet)
             if tracklet.gamma <= self.gamma_threshold:
                 low_gamma_tracklet_list.append(tracklet)
             else:
                 high_gamma_tracklet_list.append(tracklet)
 
-        self._make_associations(timestamp, low_gamma_tracklet_list, current_detected_list, confidence_list)
-        self._make_associations(timestamp, high_gamma_tracklet_list, current_detected_list, confidence_list)
+        self._make_associations(low_gamma_tracklet_list, current_detected_list, confidence_list)
+        self._make_associations(high_gamma_tracklet_list, current_detected_list, confidence_list)
 
         # all unassigned detection boxes are used to make new tracklets
         # TODO add a confidence threshold to make a new tracklet
-        for current_detection in current_detected_list:
-            # TODO Look at the Nuns
-            if current_detection != None:
-                self.tracklet_list.append(
-                    DetectionTracker.Tracklet.Tracklet(current_detection, timestamp, next(self.id_iterator)))
+        # for current_detection in current_detected_list:
+        #     # TODO Look at the Nuns
+        #     if current_detection != None:
+        #         self.tracklet_list.append(
+        #             DetectionTracker.Tracklet.Tracklet(current_detection, next(self.id_iterator)))
 
-    def _make_associations(self, timestamp, tracklet_list, current_detected_list, confidence_list):
+    def _make_associations(self, tracklet_list, current_detected_list, confidence_list):
 
         # a matrix containing scores of all tracklets against all detections
         scores_mat = self._create_score_matrix(tracklet_list, current_detected_list)
@@ -168,7 +120,7 @@ class Tracker:
 
             # Writing azimuth and elevation angles to file for  debugging
 
-            tracklet_to_update.update_tracklet(associated_detection_box, timestamp)
+            tracklet_to_update.update_tracklet(associated_detection_box)
 
             # delete the row and column from scores_mat
             scores_mat = np.delete(scores_mat, t_idx, 0)
