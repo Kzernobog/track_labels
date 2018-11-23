@@ -1,11 +1,11 @@
 import cv2
+from typing import List
 
 
 class Detection:
-    def __init__(self, bbox):
+    def __init__(self, bbox: List[int]):
         self.bbox = bbox  # [x_min, y_min, x_max, y_max] the detection list
         self.label = None  # an id to mark the detection box
-        self.is_marked = False  # true if box is labelled and false otherwise
 
     def draw_bbox(self, frame):
         frame = frame.copy()
@@ -13,7 +13,7 @@ class Detection:
 
         if self.label is None:
             # draw a thin white box
-            colour = (0, 255, 0)
+            colour = (255, 255, 255)
             box_thickness = 1
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
@@ -47,4 +47,3 @@ class Detection:
 
     def reset(self):
         self.label = None
-        self.is_marked = False

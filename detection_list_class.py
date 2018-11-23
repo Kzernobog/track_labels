@@ -23,7 +23,7 @@ class DetectionList:
         :return: (bool) True if all marked and False otherwise
         """
         for detection in self.detections_list:
-            if not detection.is_marked:
+            if detection.label is None:
                 return False
         return True
 
@@ -37,7 +37,7 @@ class DetectionList:
         """
         for detection in self.detections_list:
             if detection.point_in_box(point):
-                if detection.is_marked:
+                if detection.label is not None:
                     return False
                 else:
                     return True
@@ -81,7 +81,7 @@ class DetectionList:
         if detection_containing_point is None:
             return False
         else:
-            if type(label) == int:
+            if type(label) is int:
                 detection_containing_point.label = label
                 detection_containing_point.is_marked = True
                 return True
@@ -98,6 +98,14 @@ class DetectionList:
         """
         for detection in self.detections_list:
             detection.reset()
+
+    def get_bbox_list(self):
+        bbox_list = [detection.bbox for detection in self.detections_list]
+        return bbox_list
+
+    def get_labels_list(self):
+        labels_list = [detection.label for detection in self.detections_list]
+        return labels_list
 
 
 
