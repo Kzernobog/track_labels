@@ -109,11 +109,11 @@ class TrackLabelGUI(object):
             return None
 
         # update the tracklet with detections and labels
-        current_detected_list = self.detection_list.get_bbox_list()
-        labels_list = self.detection_list.get_labels_list()
+        # current_detected_list = self.detection_list.get_bbox_list()
+        # labels_list = self.detection_list.get_labels_list()
 
         # new tracklets are created with given labels
-        self.tracker_obj.update_frame(current_detected_list, labels_list)
+        # self.tracker_obj.update_frame(current_detected_list, labels_list)
 
         # retrieves the next frame
         self._frame_num += 1
@@ -126,10 +126,10 @@ class TrackLabelGUI(object):
 
         current_detected_list = self.detection_list.get_bbox_list()
 
-        labels_list = self.tracker_obj.get_labels(current_detected_list)
+        # labels_list = self.tracker_obj.get_labels(current_detected_list)
 
-        for idx, detection in enumerate(self.detection_list.detections_list):
-            detection.label = labels_list[idx]
+        # for idx, detection in enumerate(self.detection_list.detections_list):
+        #     detection.label = labels_list[idx]
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
@@ -212,7 +212,7 @@ class TrackLabelGUI(object):
         labels_list = self.detection_list.get_labels_list()
 
         # new tracklets are created with given labels
-        self.tracker_obj.update_frame(current_detected_list, labels_list)
+        # self.tracker_obj.update_frame(current_detected_list, labels_list)
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
