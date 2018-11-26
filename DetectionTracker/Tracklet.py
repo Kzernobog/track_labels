@@ -22,7 +22,7 @@ class Tracklet:
         else:
             q.put(item)
 
-    def update_tracklet(self, current_bbox, current_timestamp):
+    def update_tracklet(self, current_bbox):
 
         self.push(self.bbox_queue, current_bbox)
 

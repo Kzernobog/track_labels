@@ -49,8 +49,8 @@ class Tracker:
             if detection_match==False:
                 tracklet_id_list.append(None)
 
-        if(len(current_detected_list)>0):
-            tracklet_id_list = [i[0] for i in tracklet_id_list]
+        # if(len(current_detected_list)>0):
+        #     tracklet_id_list = [i[0] for i in tracklet_id_list]
         # if len(self.selected_tracklet.bbox_queue == None
 
         return tracklet_id_list

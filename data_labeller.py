@@ -215,10 +215,10 @@ class TrackLabelGUI(object):
         self.detection_list = DetectionList(boxes)
 
         current_detected_list = self.detection_list.get_bbox_list()
-        labels_list = self.detection_list.get_labels_list()
 
-        # new tracklets are created with given labels
-        self.tracker_obj.update_frame(current_detected_list, labels_list)
+
+
+
 
         frame = self.detection_list.draw(frame)
         self._display_frame(frame)
