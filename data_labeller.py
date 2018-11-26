@@ -92,10 +92,14 @@ class TrackLabelGUI(object):
     def _get_next_frame(self):
         # TODO add check for unique labels
         if self.detection_list.all_labeled():  # if all detections have been labelled
-            self._write_into_file()
+            if self.detection_list.labels_are_unique():
+                self._write_into_file()
+            else:  # labels are not unique
+                msg.showerror("Repeating labels", "All the labels must be unique.")
+                return
 
         else:  # if detections are left which are yet to be labelled
-            msg.showinfo('Unfinished labelling', 'There are Detections yet to be labelled')
+            msg.showerror('Unfinished labelling', 'There are Detections yet to be labelled')
             return
 
         # checks if there are any valid frames

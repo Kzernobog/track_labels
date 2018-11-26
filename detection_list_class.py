@@ -27,6 +27,12 @@ class DetectionList:
                 return False
         return True
 
+    def labels_are_unique(self):
+        sorted_positive_labels = sorted([label for label in self.get_labels_list() if label > 0])
+
+        # check for uniqueness by converting to set and back (sort because sets are disordered)
+        return sorted_positive_labels == sorted(list(set(sorted_positive_labels)))
+
     def point_in_unmarked_detection_box(self, point):
         """
         Functions returns true if the given point is contained with a detection object
