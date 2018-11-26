@@ -1,11 +1,14 @@
 import cv2
 from typing import List
 
+from colours import Colour
+
 
 class Detection:
     def __init__(self, bbox: List[int]):
         self.bbox: List[int] = bbox  # [x_min, y_min, x_max, y_max] the detection list
         self.label: int = None  # an id to mark the detection box
+        self.color = None
 
     def draw_bbox(self, frame):
         frame = frame.copy()
@@ -19,9 +22,13 @@ class Detection:
 
         else:
             # TODO Provide an option for drawing black boxes for non-tank objects
-            # draw a slightly thicker red box
-            # TODO use different colours for each box (perhaps choosing them randomly)
-            colour = (0, 255, 0)
+            # choose a random color to draw the bbox if a color was not already picked previously
+            if self.color is None:
+                colour = Colour.random_colour()
+                self.color = colour
+            else:
+                colour = self.color
+
             box_thickness = 2
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
@@ -47,3 +54,4 @@ class Detection:
 
     def reset(self):
         self.label = None
+        self.color = None
