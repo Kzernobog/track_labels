@@ -25,6 +25,8 @@ class IdWindow(tk.Toplevel):
         output_frame.grid(row=1, column=0)
         ok_button = tk.Button(output_frame, text='Ok', command=self.on_press_ok)
         ok_button.grid(row=0, column=0)
+
+        # keep focus on this window till destroyed
         self.grab_set()
 
     def on_press_ok(self):
