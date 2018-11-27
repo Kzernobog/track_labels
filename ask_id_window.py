@@ -17,12 +17,25 @@ class IdWindow(tk.Toplevel):
         input_frame.grid(row=0, column=0)
         input_label = tk.Label(input_frame, text="Enter the label")
         input_label.grid(row=0, column=0)
-        entry_box = tk.Entry(input_frame, width=8, textvariable=self.num_str)
-        entry_box.grid(row=0, column=1)
+        self.entry_box = tk.Entry(input_frame, width=8, textvariable=self.num_str)
+        self.entry_box.grid(row=0, column=1)
+
+        # label frame for radio buttons to mark occlusion and no-tank
+        occ_frame = tk.LabelFrame(self)
+        occ_frame.grid(row=1, column=0)
+        self.rad_var = tk.IntVar()
+        self.rad_var.set(0)  # normal mode is selected by default
+        rad_1 = tk.Radiobutton(occ_frame, text='No Tank', variable=self.rad_var, value=-1, command=self.rad_call)
+        rad_1.grid(row=0, column=0)
+        rad_2 = tk.Radiobutton(occ_frame, text='Tank-Tank Occlusion', variable=self.rad_var, value=-2,
+                               command=self.rad_call)
+        rad_2.grid(row=0, column=1)
+        rad_3 = tk.Radiobutton(occ_frame, text='Normal', variable=self.rad_var, value=0, command=self.rad_call)
+        rad_3.grid(row=0, column=2)
 
         # label frame containing store button
         output_frame = tk.LabelFrame(self)
-        output_frame.grid(row=1, column=0)
+        output_frame.grid(row=2, column=0)
         ok_button = tk.Button(output_frame, text='Ok', command=self.on_press_ok)
         ok_button.grid(row=0, column=0)
 
@@ -33,9 +46,20 @@ class IdWindow(tk.Toplevel):
         self.grab_set()
 
         # set focus to the text field where id is entered
-        entry_box.focus_set()
+        self.entry_box.focus_set()
 
-    def on_press_ok(self, event = None):
+    def rad_call(self):
+        rad_selected = self.rad_var.get()
+
+        # TODO remove everything in textbox and disable it
+
+        if rad_selected == -1 or rad_selected == -2:  # No tank in frame or occ
+            self.num_str = ''  # empty the textbox
+            self.entry_box.config(state = 'disabled')  # disable the text box which takes ids
+        elif rad_selected == 0:  # normal mode
+            self.entry_box.config(state = 'normal')
+
+    def on_press_ok(self, event=None):
         """
         This is what happens when the ok button is pressed.
         If the value in the text field is an integer, it sets the corresponding
@@ -44,14 +68,20 @@ class IdWindow(tk.Toplevel):
         :param event: A parameter that is passed by bind function (pressing enter here)
         :return: (None)
         """
-        # check if the label entered for detection is proper
-        label_string = self.num_str.get()
+        # check if textbox should be used (for eg, it should not if in occ mode)
+        rad_selected = self.rad_var.get()
 
-        if not label_string.isdigit() or int(label_string) < 1:
-            messagebox.showerror("Bad Label", "Enter a positive integer for the label")
-        else:
-            self.entered_number = int(label_string)
-            self.destroy()
+        if rad_selected == 0:  # normal mode
+            label_string = self.num_str.get()
+
+            if not label_string.isdigit() or int(label_string) < 1:
+                messagebox.showerror("Bad Label", "Enter a positive integer for the label")
+            else:
+                self.entered_number = int(label_string)
+        else:  # it is either in tank-tank occlusion or no-tank
+            self.entered_number = rad_selected
+
+        self.destroy()
 
 
 def ask_id(detection: Detection):
