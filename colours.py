@@ -2,12 +2,23 @@ import random
 
 
 class Colour:
-    colours_list = ["#dce775", "#f57f17", "#4caf50", "#4dd0e1", "#2e7d32", "#ff5722", "#aeea00", "#18ffff", "#ff8a65"]
+    colours_list = ["#E53935", "#0277BD", "#388E3C", "#6A1B9A", "#FFFF00", "#EF6C00", "#6D4C41"]
 
     @staticmethod
-    def random_colour():
-        # choose a color randomly
-        colour_choice = random.choice(Colour.colours_list)
+    def choose_colour(n=None):
+        """
+        Chooses a color with n matching the position of colors_list.
+        However, if n is either too large or too small (or None),
+        a random color is chosen.
+        :param n: (int)
+        :return:
+        """
+        if type(n) is int and 1 <= n <= len(Colour.colours_list):
+            # pick the nth color from the list
+            colour_choice = Colour.colours_list[n - 1]
+        else:
+            # choose a color randomly
+            colour_choice = random.choice(Colour.colours_list)
 
         # convert the color to a tuple
         h = colour_choice.lstrip('#')
@@ -18,4 +29,4 @@ class Colour:
 
 if __name__ == '__main__':
     for i in range(10):
-        print(Colour.random_colour())
+        print(Colour.choose_colour())

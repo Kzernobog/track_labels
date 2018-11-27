@@ -26,10 +26,24 @@ class IdWindow(tk.Toplevel):
         ok_button = tk.Button(output_frame, text='Ok', command=self.on_press_ok)
         ok_button.grid(row=0, column=0)
 
+        # bind enter key to the ok button
+        self.bind('<Return>', self.on_press_ok)
+
         # keep focus on this window till destroyed
         self.grab_set()
 
-    def on_press_ok(self):
+        # set focus to the text field where id is entered
+        entry_box.focus_set()
+
+    def on_press_ok(self, event = None):
+        """
+        This is what happens when the ok button is pressed.
+        If the value in the text field is an integer, it sets the corresponding
+        class attribute with this number which can then be retrieved outside.
+        Else, an error is displayed.
+        :param event: A parameter that is passed by bind function (pressing enter here)
+        :return: (None)
+        """
         # check if the label entered for detection is proper
         label_string = self.num_str.get()
 
@@ -52,9 +66,6 @@ def ask_id(detection: Detection):
     id_window = IdWindow()
     id_window.wait_window()
     entered_id = id_window.entered_number
-
-    # TODO DEBUG
-    # print("Value entered is: {}".format(entered_id))
 
     if entered_id is not None:
         detection.label = entered_id
