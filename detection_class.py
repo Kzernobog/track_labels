@@ -14,17 +14,17 @@ class Detection:
         frame = frame.copy()
         x_min, y_min, x_max, y_max = self.bbox
 
-        if self.label is None:
+        if self.label is None: # if the tank is not marked yet
             # draw a thin white box
             colour = (255, 255, 255)
             box_thickness = 1
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
-        else:
+        else:  # if the tank is marked
             # TODO Provide an option for drawing black boxes for non-tank objects
             # choose a random color to draw the bbox if a color was not already picked previously
-            if self.color is None:
-                colour = Colour.random_colour()
+            if self.color is None:  # if the detection has not already been assigned a colour
+                colour = Colour.choose_colour(self.label)
                 self.color = colour
             else:
                 colour = self.color
