@@ -85,6 +85,7 @@ class TrackLabelGUI(object):
         # button to load next frame
         self._load_next_frame_btn = ttk.Button(self._mainUIFrame, text="Next", command=self._get_next_frame)
         self._load_next_frame_btn.grid(row=0, column=4, sticky=tk.E)
+        self._load_next_frame_btn.config(state='disabled')
 
         return None
 
@@ -219,6 +220,7 @@ class TrackLabelGUI(object):
         self.detection_list = DetectionList(boxes)
 
         current_detected_list = self.detection_list.get_bbox_list()
+        self._load_next_frame_btn.config(state='normal')
 
 
 

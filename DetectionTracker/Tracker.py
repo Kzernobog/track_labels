@@ -25,6 +25,7 @@ class Tracker:
 
 
     def update_frame(self, current_detected_list, labels_list):
+        self.tracklet_list=[]
         for idx,current_detection in enumerate(current_detected_list):
             self.tracklet_list += [DetectionTracker.Tracklet.Tracklet
                                    (current_detection,labels_list[idx])]
