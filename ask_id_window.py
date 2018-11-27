@@ -51,10 +51,8 @@ class IdWindow(tk.Toplevel):
     def rad_call(self):
         rad_selected = self.rad_var.get()
 
-        # TODO remove everything in textbox and disable it
-
         if rad_selected == -1 or rad_selected == -2:  # No tank in frame or occ
-            self.num_str = ''  # empty the textbox
+            self.num_str.set('')   # empty the textbox
             self.entry_box.config(state = 'disabled')  # disable the text box which takes ids
         elif rad_selected == 0:  # normal mode
             self.entry_box.config(state = 'normal')
@@ -89,6 +87,8 @@ def ask_id(detection: Detection):
     Used to update the label of a detection from user input.
     Causes a GUI to be displayed which ask for a positive integer.
     Uses this to update the label.
+    -1 indicates No Tank
+    -2 indicates Tank-Tank Occlusion
 
     If the GUI is closed, the detection's label is NOT changed.
     :return: (None)

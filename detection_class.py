@@ -7,7 +7,7 @@ from colours import Colour
 class Detection:
     def __init__(self, bbox: List[int]):
         self.bbox: List[int] = bbox  # [x_min, y_min, x_max, y_max] the detection list
-        self.label: int = None  # an id to mark the detection box
+        self.label: int = None  # an id to mark the detection box (-1 for no-tank, -2 for occlusion)
         self.color = None
 
     def draw_bbox(self, frame):
@@ -21,21 +21,26 @@ class Detection:
             cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
 
         else:  # if the tank is marked
-            # TODO Provide an option for drawing black boxes for non-tank objects
-            # choose a random color to draw the bbox if a color was not already picked previously
-            if self.color is None:  # if the detection has not already been assigned a colour
+            if self.label == -1:  # no tank
+                label_text = 'Not Tank'
+                colour = (0, 0, 0)
+                box_thickness = 1
+                text_size = 0.5
+
+            elif self.label == -2:  # tank on tank occlusion
+                label_text = 'T-T Occ'
+                colour = (0, 0, 255)
+                box_thickness = 3
+                text_size = 0.5
+
+            else:  # the label is positive, meaning it is a proper tank
+                label_text = 'ID: {}'.format(self.label)
                 colour = Colour.choose_colour(self.label)
-                self.color = colour
-            else:
-                colour = self.color
+                box_thickness = 2
+                text_size = 0.5
 
-            box_thickness = 2
-            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
-
-            # mention label on the box
-            label_text = '{}'.format(self.label)
             text_colour = (255, 255, 255)
-            text_size = 0.5
+            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colour, box_thickness)
             cv2.putText(frame, label_text, (x_min, y_min - 5), cv2.FONT_HERSHEY_SIMPLEX, text_size,
                         text_colour, 1, cv2.LINE_AA)
 
